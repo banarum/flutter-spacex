@@ -27,6 +27,10 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  json_annotation: ^4.3.0
+
+  http: ^0.13.3
+
   flutter:
     sdk: flutter
 
@@ -36,6 +40,10 @@ dependencies:
   cupertino_icons: ^1.0.2
 
 dev_dependencies:
+
+  build_runner: ^2.0.0
+  json_serializable: ^6.0.0
+
   flutter_test:
     sdk: flutter
 

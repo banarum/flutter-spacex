@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:fluuter_spacex/network/api.dart';
 
 class LaunchTableView extends StatefulWidget {
   LaunchTableView({Key? key}) : super(key: key);
@@ -20,6 +21,8 @@ class LaunchTableState extends State<LaunchTableView> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    SpaceXApi.shared.getUpcomingLaunches().then((rsp) => print(rsp[0].rocketData!.name));
   }
 
   @override

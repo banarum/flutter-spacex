@@ -14,14 +14,16 @@ LaunchModel _$LaunchModelFromJson(Map<String, dynamic> json) => LaunchModel(
       json['rocketData'] == null
           ? null
           : RocketModel.fromJson(json['rocketData'] as Map<String, dynamic>),
+      json['date_utc'] as String,
     );
 
 Map<String, dynamic> _$LaunchModelToJson(LaunchModel instance) =>
     <String, dynamic>{
       'date_unix': instance.unixDate,
+      'date_utc': instance.utcDate,
       'name': instance.name,
       'links': instance.links,
-      'rocket': instance.rocket,
+      'rocket': instance.rocketId,
       'rocketData': instance.rocketData,
     };
 

@@ -1,27 +1,10 @@
 import 'package:flutter/cupertino.dart';
-import 'package:fluuter_spacex/ui/launch_detail_view.dart';
-import 'package:fluuter_spacex/ui/launches_table_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spacex/network/repository.dart';
+import 'app.dart';
+import 'bloc/bloc_observer.dart';
 
 void main() {
-  runApp(App());
+  Bloc.observer = AppBlocObserver();
+  runApp(App(repository: Repository()));
 }
-
-class App extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoApp(
-      title: 'SpaceX official',
-      onGenerateRoute: (RouteSettings settings) {
-        var routes = <String, WidgetBuilder>{
-          "/": (ctx) => LaunchTableView(),
-          "/launch": (ctx) => LaunchDetailView(args: settings.arguments as LaunchArguments),
-        };
-        WidgetBuilder builder = routes[settings.name]!;
-        return CupertinoPageRoute(builder: (ctx) => builder(ctx));
-      },
-    );
-  }
-}
-
-
-

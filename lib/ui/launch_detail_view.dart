@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_spacex/network/models.dart';
 
 class LaunchDetailView extends StatefulWidget {
   final LaunchArguments args;
 
-  LaunchDetailView({Key? key, required this.args}) : super(key: key);
+  const LaunchDetailView({Key? key, required this.args}) : super(key: key);
 
   @override
   LaunchDetailState createState() => LaunchDetailState();
@@ -27,8 +28,8 @@ class LaunchDetailState extends State<LaunchDetailView> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text('Cupertino Store'),
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('Cupertino Store'),
       ),
       child: Container(),
     );
@@ -36,7 +37,7 @@ class LaunchDetailState extends State<LaunchDetailView> {
 }
 
 class LaunchArguments {
-  //final int id;
+  final LaunchModel launchModel;
 
-  LaunchArguments();
+  LaunchArguments(this.launchModel);
 }

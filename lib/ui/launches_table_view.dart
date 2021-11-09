@@ -5,6 +5,7 @@ import 'package:flutter_spacex/bloc/cubit/launches/launches_cubit.dart';
 import 'package:flutter_spacex/bloc/cubit/ticker/ticker_cubit.dart';
 import 'package:flutter_spacex/network/models.dart';
 import 'package:flutter_spacex/network/repository.dart';
+import 'package:flutter_spacex/ui/launch_detail_view.dart';
 
 class LaunchTableView extends StatelessWidget {
   const LaunchTableView({Key? key}) : super(key: key);
@@ -22,27 +23,67 @@ class LaunchTableView extends StatelessWidget {
   Widget screenContent() {
     return Builder(builder: (context) {
       return BlocProvider(
-          create: (_) => TickerCubit()
-        ..startTicker(),
-      child: CupertinoPageScaffold(
-          navigationBar: CupertinoNavigationBar(
-            middle: const Text('SpaceX'),
-            trailing: CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: const Icon(
-                CupertinoIcons.refresh,
-                size: 25,
+          create: (_) => TickerCubit()..startTicker(),
+          child: CupertinoPageScaffold(
+              navigationBar: CupertinoNavigationBar(
+                middle: const Text('SpaceX'),
+                trailing: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: const Icon(
+                    CupertinoIcons.refresh,
+                    size: 25,
+                  ),
+                  onPressed: () =>
+                      context.read<LaunchesCubit>().refreshLaunches(),
+                ),
               ),
-              onPressed: () => context.read<LaunchesCubit>().refreshLaunches(),
-            ),
-          ),
-          child: const LaunchesListView()));
+              child: const SafeArea(child: LaunchesListView())));
     });
   }
 }
 
-class LaunchesListView extends StatelessWidget {
+class LaunchesListView extends StatefulWidget {
   const LaunchesListView({Key? key}) : super(key: key);
+
+  @override
+  _LaunchesListState createState() => _LaunchesListState();
+}
+
+class _LaunchesListState extends State<LaunchesListView>
+    with WidgetsBindingObserver {
+
+  void gotoLaunch(LaunchModel launchModel) {
+
+    Navigator.of(context)
+        .pushNamed("/launch", arguments: LaunchArguments(launchModel)).then((value) => context.read<TickerCubit>().startTicker());
+    context.read<TickerCubit>().stopTicker();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance?.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        context.read<TickerCubit>().startTicker();
+        break;
+      case AppLifecycleState.paused:
+        context.read<TickerCubit>().stopTicker();
+        break;
+      default:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +94,7 @@ class LaunchesListView extends StatelessWidget {
       case ListStatus.failure:
         return const Center(child: Text('Oops something went wrong!'));
       case ListStatus.success:
-        return listContent(launchesState.items, tickerState.currentUnixTime);
+        return listContent(launchesState.upcomingLaunches!, tickerState.currentUnixTime);
       default:
         return const Center(
           child: CupertinoActivityIndicator(),
@@ -65,17 +106,17 @@ class LaunchesListView extends StatelessWidget {
     return ListView.builder(
         itemCount: launches.length,
         itemBuilder: (context, i) => Container(
-              child: launchItem(launches[i], currentUnixTime),
+              child: launchItem(launches[i], DateTime.now()),
             ));
   }
 
-  Widget launchItem(LaunchModel launchModel, int currentUnixTime) {
+  Widget launchItem(LaunchModel launchModel, DateTime currentTime) {
     return Builder(builder: (context) {
       return Material(
           color: Colors.transparent,
           child: InkWell(
               onTap: () {
-                context.read<TickerCubit>().startTicker();
+                gotoLaunch(launchModel);
               },
               child: Container(
                   padding: const EdgeInsets.only(bottom: 20, top: 20),
@@ -83,7 +124,7 @@ class LaunchesListView extends StatelessWidget {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Text(launchModel.timeLeft(currentUnixTime)),
+                        Text(launchModel.timeLeft(currentTime)),
                         Text("${launchModel.name}"),
                         Text("${launchModel.rocketData?.name}")
                       ]))));

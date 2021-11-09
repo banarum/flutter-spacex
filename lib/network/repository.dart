@@ -2,27 +2,57 @@ import 'package:flutter_spacex/network/api.dart';
 import 'api.dart';
 import 'models.dart';
 
-
 class Repository {
-
   final SpaceXApi spaceXApi = SpaceXApi();
 
-  Future<List<LaunchModel>> getUpcomingLaunches() async {
+  List<LaunchModel>? launchesData;
+  Map<String, LaunchModel> detailedLaunchesData = {};
 
+  Future<void> refreshLaunchesData() async {
+    launchesData = await _getUpcomingLaunches();
+    detailedLaunchesData = {};
+  }
+
+
+  Future<void> getDetailedDataForLaunch(String launchId) async {
+    LaunchModel detailedLaunchModel = await _getLaunchDetail(launchId);
+
+    detailedLaunchesData[launchId] = detailedLaunchModel;
+  }
+
+  Future<List<LaunchModel>> _getUpcomingLaunches() async {
     final launchesResponse = await spaceXApi.requestUpcomingLaunches();
 
-    var launchesList = List<LaunchModel>.from(launchesResponse.map((x) => LaunchModel.fromJson(x)));
-
-    launchesList = await Future.wait(launchesList.map((launch) async {
-      if (launch.rocketId != null) {
-        final rocketResponse = await spaceXApi.requestRocketData(launch.rocketId!);
-        launch.rocketData = RocketModel.fromJson(rocketResponse);
+    return List<LaunchModel>.from(
+        await Future.wait(launchesResponse.map((launch) async {
+      final launchModel = LaunchModel.fromJson(launch);
+      if (launchModel.rocketId != null) {
+        launchModel.rocketData = await _getRocketData(launchModel.rocketId!);
       }
-      return launch;
-    }));
 
-    launchesList.sort((item1, item2) => item1.unixDate - item2.unixDate);
-
-    return launchesList;
+      return launchModel;
+    })))
+      ..sort((item1, item2) => item1.unixDate - item2.unixDate);
   }
+
+  Future<LaunchModel> _getLaunchDetail(String id) async {
+    final launchDetailResponse = await spaceXApi.requestLaunchDetails(id);
+
+    final launchModel = LaunchModel.fromJson(launchDetailResponse);
+    if (launchModel.rocketId != null) {
+      launchModel.rocketData = await _getRocketData(launchModel.rocketId!);
+    }
+
+    if (launchModel.launchpadId != null) {
+      launchModel.launchpadData = await _getLaunchpadData(launchModel.launchpadId!);
+    }
+
+    return launchModel;
+  }
+
+  Future<RocketModel> _getRocketData(String id) async =>
+      RocketModel.fromJson(await spaceXApi.requestRocketData(id));
+
+  Future<LaunchpadModel> _getLaunchpadData(String id) async =>
+      LaunchpadModel.fromJson(await spaceXApi.requestLaunchpadData(id));
 }

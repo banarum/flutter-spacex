@@ -11,31 +11,52 @@ LaunchModel _$LaunchModelFromJson(Map<String, dynamic> json) => LaunchModel(
       json['name'] as String?,
       LinksModel.fromJson(json['links'] as Map<String, dynamic>),
       json['rocket'] as String?,
-      json['rocketData'] == null
-          ? null
-          : RocketModel.fromJson(json['rocketData'] as Map<String, dynamic>),
       json['date_utc'] as String,
+      json['id'] as String,
+      json['launchpad'] as String?,
     );
 
 Map<String, dynamic> _$LaunchModelToJson(LaunchModel instance) =>
     <String, dynamic>{
       'date_unix': instance.unixDate,
+      'id': instance.id,
+      'launchpad': instance.launchpadId,
       'date_utc': instance.utcDate,
       'name': instance.name,
       'links': instance.links,
       'rocket': instance.rocketId,
-      'rocketData': instance.rocketData,
     };
 
 LinksModel _$LinksModelFromJson(Map<String, dynamic> json) => LinksModel(
       json['patch'] == null
           ? null
           : PatchModel.fromJson(json['patch'] as Map<String, dynamic>),
+      json['reddit'] == null
+          ? null
+          : RedditModel.fromJson(json['reddit'] as Map<String, dynamic>),
+      json['wikipedia'] as String?,
+      json['youtube_id'] as String?,
+      json['webcast'] as String?,
+      json['article'] as String?,
     );
 
 Map<String, dynamic> _$LinksModelToJson(LinksModel instance) =>
     <String, dynamic>{
       'patch': instance.patch,
+      'reddit': instance.reddit,
+      'wikipedia': instance.wikipedia,
+      'youtube_id': instance.youtubeId,
+      'webcast': instance.webcast,
+      'article': instance.article,
+    };
+
+RedditModel _$RedditModelFromJson(Map<String, dynamic> json) => RedditModel(
+      json['campaign'] as String?,
+    );
+
+Map<String, dynamic> _$RedditModelToJson(RedditModel instance) =>
+    <String, dynamic>{
+      'campaign': instance.campaign,
     };
 
 PatchModel _$PatchModelFromJson(Map<String, dynamic> json) => PatchModel(
@@ -56,4 +77,31 @@ RocketModel _$RocketModelFromJson(Map<String, dynamic> json) => RocketModel(
 Map<String, dynamic> _$RocketModelToJson(RocketModel instance) =>
     <String, dynamic>{
       'name': instance.name,
+    };
+
+LaunchpadModel _$LaunchpadModelFromJson(Map<String, dynamic> json) =>
+    LaunchpadModel(
+      json['full_name'] as String,
+      json['locality'] as String,
+      (json['latitude'] as num).toDouble(),
+      (json['longitude'] as num).toDouble(),
+      ImagesModel.fromJson(json['images'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$LaunchpadModelToJson(LaunchpadModel instance) =>
+    <String, dynamic>{
+      'full_name': instance.fullName,
+      'locality': instance.locality,
+      'latitude': instance.latitude,
+      'longitude': instance.longitude,
+      'images': instance.images,
+    };
+
+ImagesModel _$ImagesModelFromJson(Map<String, dynamic> json) => ImagesModel(
+      (json['large'] as List<dynamic>?)?.map((e) => e as String).toList(),
+    );
+
+Map<String, dynamic> _$ImagesModelToJson(ImagesModel instance) =>
+    <String, dynamic>{
+      'large': instance.large,
     };

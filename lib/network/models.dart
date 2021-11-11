@@ -34,40 +34,6 @@ class LaunchModel {
 
   factory LaunchModel.fromJson(Map<String, dynamic> json) =>
       _$LaunchModelFromJson(json);
-
-  String timeLeft(DateTime now) {
-    final launchTime = DateTime.parse(utcDate);
-
-    final difference = launchTime.difference(now);
-
-    if (difference.isNegative) return "Lift off!";
-
-    final int daysLeft = difference.inDays;
-    final int hoursLeft = difference.inHours - daysLeft * 24;
-    final int minutesLeft =
-        difference.inMinutes - daysLeft * 24 * 60 - hoursLeft * 60;
-    final int secondsLeft = difference.inSeconds -
-        daysLeft * 24 * 60 * 60 -
-        hoursLeft * 60 * 60 -
-        minutesLeft * 60;
-
-    String formatTimeValue(int num) => num < 10 ? "0$num" : num.toString();
-
-    final String daysLabel = daysLeft.toString();
-    final String hoursLabel = hoursLeft.toString();
-    final String minutesLabel = formatTimeValue(minutesLeft);
-    final String secondsLabel = formatTimeValue(secondsLeft);
-
-    if (daysLeft < 1) {
-      return "Launch today at $hoursLabel:$minutesLabel:$secondsLabel";
-    }
-
-    if (daysLeft == 1) {
-      return "Launch in $daysLabel day $hoursLabel:$minutesLabel:$secondsLabel";
-    }
-
-    return "Launch in $daysLabel days $hoursLabel:$minutesLabel:$secondsLabel";
-  }
 }
 
 @JsonSerializable()

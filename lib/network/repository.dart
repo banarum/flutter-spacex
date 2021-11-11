@@ -7,12 +7,30 @@ class Repository {
 
   List<LaunchModel>? launchesData;
   Map<String, LaunchModel> detailedLaunchesData = {};
+  Map<LaunchModel, RocketModel> rockets = {};
 
   Future<void> refreshLaunchesData() async {
-    launchesData = await _getUpcomingLaunches();
-    detailedLaunchesData = {};
-  }
+    launchesData = await _getLaunches();
+    launchesData?.sort((item1, item2) {
+      final item1Time = DateTime.parse(item1.utcDate);
+      final item2Time = DateTime.parse(item2.utcDate);
 
+      final item1TimeDiffWithNow = item1Time.difference(DateTime.now());
+      final item2TimeDiffWithNow = item2Time.difference(DateTime.now());
+
+      if (!item1TimeDiffWithNow.isNegative && !item2TimeDiffWithNow.isNegative) {
+        return -item2Time.compareTo(item1Time);
+      } else if (item1TimeDiffWithNow.isNegative && item2TimeDiffWithNow.isNegative) {
+        return item2Time.compareTo(item1Time);
+      } else if (item1TimeDiffWithNow.isNegative) {
+        return 1;
+      } else {
+        return -1;
+      }
+    });
+    detailedLaunchesData = {};
+    rockets = {};
+  }
 
   Future<void> getDetailedDataForLaunch(String launchId) async {
     LaunchModel detailedLaunchModel = await _getLaunchDetail(launchId);
@@ -20,19 +38,24 @@ class Repository {
     detailedLaunchesData[launchId] = detailedLaunchModel;
   }
 
-  Future<List<LaunchModel>> _getUpcomingLaunches() async {
+  Future<void> getRocketsForLaunches(List<LaunchModel> launches) async {
+    final List<LaunchModel> launchesWithRocketId = launches.where((
+        element) => element.rocketId != null).toList();
+    return Future.forEach(
+        launchesWithRocketId,
+        ((LaunchModel element) async =>
+        rockets[element] = await _getRocketData(element.rocketId!)));
+  }
+
+  Future<List<LaunchModel>> _getLaunches() async {
     final launchesResponse = await spaceXApi.requestUpcomingLaunches();
 
     return List<LaunchModel>.from(
         await Future.wait(launchesResponse.map((launch) async {
-      final launchModel = LaunchModel.fromJson(launch);
-      if (launchModel.rocketId != null) {
-        launchModel.rocketData = await _getRocketData(launchModel.rocketId!);
-      }
+          final launchModel = LaunchModel.fromJson(launch);
 
-      return launchModel;
-    })))
-      ..sort((item1, item2) => item1.unixDate - item2.unixDate);
+          return launchModel;
+        })));
   }
 
   Future<LaunchModel> _getLaunchDetail(String id) async {
@@ -44,7 +67,8 @@ class Repository {
     }
 
     if (launchModel.launchpadId != null) {
-      launchModel.launchpadData = await _getLaunchpadData(launchModel.launchpadId!);
+      launchModel.launchpadData =
+      await _getLaunchpadData(launchModel.launchpadId!);
     }
 
     return launchModel;

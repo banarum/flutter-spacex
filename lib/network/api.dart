@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class SpaceXApi {
   static const String api = 'https://api.spacexdata.com/v4/';
 
-  static const String getUpcomingLaunchesEndpoint = 'launches/upcoming';
+  static const String getUpcomingLaunchesEndpoint = 'launches';
   static const String getLaunchEndpoint = 'launches/{id}';
   static const String getRocketEndpoint = 'rockets/{id}';
   static const String getLaunchpadEndpoint = 'launchpads/{id}';

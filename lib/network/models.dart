@@ -12,6 +12,8 @@ class LaunchModel {
   @JsonKey(name: "launchpad")
   String? launchpadId;
 
+  List<String> payloads;
+
   @JsonKey(name: "date_utc")
   String utcDate;
 
@@ -22,15 +24,8 @@ class LaunchModel {
   @JsonKey(name: "rocket")
   String? rocketId;
 
-  // Not present in Json but we will add it after processing
-  @JsonKey(ignore: true)
-  RocketModel? rocketData;
-
-  @JsonKey(ignore: true)
-  LaunchpadModel? launchpadData;
-
   LaunchModel(this.unixDate, this.name, this.links, this.rocketId, this.utcDate,
-      this.id, this.launchpadId);
+      this.id, this.launchpadId, this.payloads);
 
   factory LaunchModel.fromJson(Map<String, dynamic> json) =>
       _$LaunchModelFromJson(json);
@@ -79,8 +74,12 @@ class PatchModel {
 @JsonSerializable()
 class RocketModel {
   String name;
+  String description;
 
-  RocketModel(this.name);
+  @JsonKey(name: "flickr_images")
+  List<String> images;
+
+  RocketModel(this.name, this.images, this.description);
 
   factory RocketModel.fromJson(Map<String, dynamic> json) =>
       _$RocketModelFromJson(json);
@@ -113,4 +112,18 @@ class ImagesModel {
 
   factory ImagesModel.fromJson(Map<String, dynamic> json) =>
       _$ImagesModelFromJson(json);
+}
+
+@JsonSerializable()
+class PayloadModel {
+  String name;
+  String type;
+
+  @JsonKey(name: "mass_kg")
+  int? mass;
+
+  PayloadModel(this.name, this.type, this.mass);
+
+  factory PayloadModel.fromJson(Map<String, dynamic> json) =>
+      _$PayloadModelFromJson(json);
 }

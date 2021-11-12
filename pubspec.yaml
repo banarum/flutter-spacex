@@ -36,6 +36,8 @@ dependencies:
 
   equatable: ^2.0.3
 
+  shared_preferences: ^2.0.8
+
   flutter:
     sdk: flutter
 

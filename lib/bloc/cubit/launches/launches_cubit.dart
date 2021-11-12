@@ -11,22 +11,33 @@ part 'launches_mapper.dart';
 
 class LaunchesCubit extends Cubit<LaunchesState> {
   LaunchesCubit({required this.repository})
-      : super(const LaunchesState.loading());
+      : super(const LaunchesState.loading()) {
+    _unsubscribeStarListener = repository.favoritesObservable.subscribe(_onStarEvent);
+  }
 
-  static const launchesPerLoad = 10;
+  static const launchesInitialLoad = 15;
+  static const launchesPerLazyLoad = 5;
 
   final Repository repository;
   StreamSubscription<void>? _tickerSubscription;
 
+  late void Function() _unsubscribeStarListener;
+
+  void _onStarEvent(String launchId) async {
+    if (state.status == ListStatus.success) {
+      final newValue = await repository.isLaunchStarred(launchId);
+      emit(LaunchesState.success(isLazyLoading: state.isLazyLoading, launches: state.launches!.map((e) {
+        if (e.launchId == launchId) {
+          e.starred = newValue;
+        }
+        return e;
+      }).toList()));
+    }
+  }
+
   Stream<void> _tick() {
     return Stream.periodic(const Duration(seconds: 1))
         .takeWhile((element) => true);
-  }
-
-  Future<void> _getRocketsForLaunches(List<LaunchModel> launches) async {
-    await repository.getRocketsForLaunches(launches
-        .where((element) => !repository.rockets.containsKey(element))
-        .toList());
   }
 
   Future<void> lazyLoadMoreLaunches() async {
@@ -38,13 +49,14 @@ class LaunchesCubit extends Cubit<LaunchesState> {
 
     try {
       final chosenLaunches = repository.launchesData!
-          .take(state.launches!.length + launchesPerLoad)
-          .toList();
-      await _getRocketsForLaunches(chosenLaunches);
-      final launchViews = _mapLaunchesToView(
-          rockets: repository.rockets,
-          launches: chosenLaunches,
-          now: DateTime.now());
+          .take(state.launches!.length + launchesPerLazyLoad);
+
+      final launchViews = await Future.wait(chosenLaunches.map((launch) async =>
+          _mapLaunchToView(
+              rocket: await repository.getRocketForLaunch(launch),
+              launch: launch,
+              now: DateTime.now(),
+              starred: await repository.isLaunchStarred(launch.id))));
 
       emit(LaunchesState.success(launches: launchViews));
 
@@ -58,13 +70,14 @@ class LaunchesCubit extends Cubit<LaunchesState> {
     try {
       await repository.refreshLaunchesData();
 
-      final chosenLaunches =
-          repository.launchesData!.take(launchesPerLoad).toList();
-      await _getRocketsForLaunches(chosenLaunches);
-      final launchViews = _mapLaunchesToView(
-          rockets: repository.rockets,
-          launches: chosenLaunches,
-          now: DateTime.now());
+      final chosenLaunches = repository.launchesData!.take(launchesInitialLoad);
+
+      final launchViews = await Future.wait(chosenLaunches.map((launch) async =>
+          _mapLaunchToView(
+              rocket: await repository.getRocketForLaunch(launch),
+              launch: launch,
+              now: DateTime.now(),
+              starred: await repository.isLaunchStarred(launch.id))));
 
       emit(LaunchesState.success(launches: launchViews));
     } on Exception {
@@ -93,6 +106,7 @@ class LaunchesCubit extends Cubit<LaunchesState> {
 
   @override
   Future<void> close() {
+    _unsubscribeStarListener();
     _tickerSubscription?.cancel();
     return super.close();
   }

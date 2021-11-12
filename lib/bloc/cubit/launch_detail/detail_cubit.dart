@@ -5,56 +5,80 @@ import 'package:flutter_spacex/network/repository.dart';
 
 part 'detail_state.dart';
 
+part 'detail_mapper.dart';
+
 class LaunchDetailCubit extends Cubit<LaunchDetailState> {
-  LaunchDetailCubit({required this.repository})
-      : super(const LaunchDetailState.loading());
+  LaunchDetailCubit({required this.repository, required this.header})
+      : super(LaunchDetailState.loading(header: header));
 
   final Repository repository;
+  final LaunchHeaderViewModel header;
 
-  List<LinkButton> mapLaunchToLinkButtons(LaunchModel launch) {
-    final List<LinkButton> links = [];
-
-    if (launch.links.reddit?.campaign != null) {
-      links.add(LinkButton(link: launch.links.reddit!.campaign!, path: "assets/images/reddit-logo.png"));
-    }
-
-    if (launch.links.wikipedia != null) {
-      links.add(LinkButton(
-          link: launch.links.wikipedia!, path: "assets/images/wikipedia-logo.png"));
-    }
-
-    return links;
+  Future<void> starLaunch(bool value) async {
+    bool isStarred = await repository.starLaunch(header.launchId, value);
+    emit(LaunchDetailState.fromState(
+        state: state, header: _mapHeaderToHeader(state.header, isStarred)));
   }
 
-  LaunchpadViewModel? mapLaunchToLaunchpad(LaunchModel launch) {
-    if (launch.launchpadData?.images.large?[0] != null) {
-      return LaunchpadViewModel(title: launch.launchpadData!.locality,
-          url: launch.launchpadData!.images.large![0]);
-    }
-    return null;
+  Future<void> _emitRocketView(LaunchModel launch) async {
+    repository.getRocketForLaunch(launch).then((rocket) {
+      if (rocket != null) {
+        if (state.status == ScreenStatus.success) {
+          emit(LaunchDetailState.success(
+            header: state.header,
+            copyState: state,
+            links: state.body!.links!,
+            rocket: _mapRocketToView(rocket),
+          ));
+        }
+      }
+    });
+  }
+
+  Future<void> _emitLaunchpadView(LaunchModel launch) async {
+    repository.getLaunchpadForLaunch(launch).then((launchpad) {
+      if (launchpad != null) {
+        if (state.status == ScreenStatus.success) {
+          emit(LaunchDetailState.success(
+            header: state.header,
+            copyState: state,
+            links: state.body!.links!,
+            launchpad: _mapLaunchpadToView(launchpad),
+          ));
+        }
+      }
+    });
+  }
+
+  Future<void> _emitPayloadView(LaunchModel launch) async {
+    repository.getPayloadsForLaunch(launch).then((payloads) {
+      if (payloads.isNotEmpty) {
+        if (state.status == ScreenStatus.success) {
+          emit(LaunchDetailState.success(
+              header: state.header,
+              copyState: state,
+              links: state.body!.links!,
+              payloads: _mapPayloadsToView(payloads)));
+        }
+      }
+    });
   }
 
   Future<void> getLaunchDetails(String id) async {
-    emit(const LaunchDetailState.loading());
+    emit(LaunchDetailState.loading(header: state.header));
 
-    LaunchModel? launch;
+    try {
+      final launch = await repository.getDetailedDataForLaunch(id);
+      final links = _mapLaunchToLinkButtons(launch);
 
-    if (repository.detailedLaunchesData.containsKey(id)) {
-      launch = repository.detailedLaunchesData[id]!;
-    } else {
-      try {
-        await repository.getDetailedDataForLaunch(id);
-        launch = repository.detailedLaunchesData[id]!;
-      } on Exception {
-        emit(const LaunchDetailState.failure());
-        return;
-      }
+      emit(LaunchDetailState.success(header: state.header, links: links));
+
+      // Emit async
+      _emitRocketView(launch);
+      _emitLaunchpadView(launch);
+      _emitPayloadView(launch);
+    } on Exception {
+      emit(LaunchDetailState.failure(header: state.header));
     }
-
-    final links = mapLaunchToLinkButtons(launch);
-    final launchpad = mapLaunchToLaunchpad(launch);
-
-    emit(LaunchDetailState.success(
-        detailedLaunchModel: launch, links: links, launchpad: launchpad));
   }
 }

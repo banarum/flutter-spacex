@@ -14,6 +14,7 @@ LaunchModel _$LaunchModelFromJson(Map<String, dynamic> json) => LaunchModel(
       json['date_utc'] as String,
       json['id'] as String,
       json['launchpad'] as String?,
+      (json['payloads'] as List<dynamic>).map((e) => e as String).toList(),
     );
 
 Map<String, dynamic> _$LaunchModelToJson(LaunchModel instance) =>
@@ -21,6 +22,7 @@ Map<String, dynamic> _$LaunchModelToJson(LaunchModel instance) =>
       'date_unix': instance.unixDate,
       'id': instance.id,
       'launchpad': instance.launchpadId,
+      'payloads': instance.payloads,
       'date_utc': instance.utcDate,
       'name': instance.name,
       'links': instance.links,
@@ -72,11 +74,15 @@ Map<String, dynamic> _$PatchModelToJson(PatchModel instance) =>
 
 RocketModel _$RocketModelFromJson(Map<String, dynamic> json) => RocketModel(
       json['name'] as String,
+      (json['flickr_images'] as List<dynamic>).map((e) => e as String).toList(),
+      json['description'] as String,
     );
 
 Map<String, dynamic> _$RocketModelToJson(RocketModel instance) =>
     <String, dynamic>{
       'name': instance.name,
+      'description': instance.description,
+      'flickr_images': instance.images,
     };
 
 LaunchpadModel _$LaunchpadModelFromJson(Map<String, dynamic> json) =>
@@ -104,4 +110,17 @@ ImagesModel _$ImagesModelFromJson(Map<String, dynamic> json) => ImagesModel(
 Map<String, dynamic> _$ImagesModelToJson(ImagesModel instance) =>
     <String, dynamic>{
       'large': instance.large,
+    };
+
+PayloadModel _$PayloadModelFromJson(Map<String, dynamic> json) => PayloadModel(
+      json['name'] as String,
+      json['type'] as String,
+      json['mass_kg'] as int?,
+    );
+
+Map<String, dynamic> _$PayloadModelToJson(PayloadModel instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'type': instance.type,
+      'mass_kg': instance.mass,
     };

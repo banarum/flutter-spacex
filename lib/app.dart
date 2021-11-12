@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spacex/bloc/cubit/launch_detail/detail_cubit.dart';
 import 'package:flutter_spacex/network/repository.dart';
-import 'package:flutter_spacex/ui/launch_detail_view.dart';
-import 'package:flutter_spacex/ui/launches_table_view.dart';
+import 'package:flutter_spacex/ui/launch_detail/launch_detail_view.dart';
+import 'package:flutter_spacex/ui/launches_table/launches_table_view.dart';
 
 class App extends StatelessWidget {
   const App({Key? key, required this.repository}) : super(key: key);
@@ -19,7 +20,7 @@ class App extends StatelessWidget {
             var routes = <String, WidgetBuilder>{
               "/": (ctx) => const LaunchTableView(),
               "/launch": (ctx) =>
-                  LaunchDetailView(args: settings.arguments as LaunchArguments),
+                  LaunchDetailView(args: settings.arguments as LaunchHeaderViewModel),
             };
             WidgetBuilder builder = routes[settings.name]!;
             return CupertinoPageRoute(builder: (ctx) => builder(ctx));

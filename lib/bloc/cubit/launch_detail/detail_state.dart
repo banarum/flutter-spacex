@@ -4,33 +4,61 @@ enum ScreenStatus { loading, success, failure }
 
 class LaunchDetailState extends Equatable {
   const LaunchDetailState._(
-      {this.status = ScreenStatus.loading,
-      this.detailedLaunchModel,
-      this.links,
-      this.launchpad});
+      {this.status = ScreenStatus.loading, required this.header, this.body});
 
-  const LaunchDetailState.loading() : this._();
+  LaunchDetailState.fromState({required LaunchDetailState state, LaunchHeaderViewModel? header}):this._(
+    status: state.status,
+    header: header ?? state.header,
+    body: state.body
+  );
 
-  const LaunchDetailState.success(
-      {required LaunchModel detailedLaunchModel,
+  const LaunchDetailState.loading({required LaunchHeaderViewModel header})
+      : this._(header: header);
+
+  LaunchDetailState.success(
+      {required LaunchHeaderViewModel header,
       required List<LinkButton> links,
-      LaunchpadViewModel? launchpad})
+      LaunchpadViewModel? launchpad,
+      RocketViewModel? rocket,
+      List<PayloadViewModel>? payloads,
+      LaunchDetailState? copyState})
       : this._(
             status: ScreenStatus.success,
-            detailedLaunchModel: detailedLaunchModel,
-            links: links,
-            launchpad: launchpad);
+            header: header,
+            body: BodyContentViewModel(
+                links: links,
+                launchpad: launchpad ?? copyState?.body?.launchpad,
+                rocket: rocket ?? copyState?.body?.rocket,
+                payloads: payloads ?? copyState?.body?.payloads));
 
-  const LaunchDetailState.failure() : this._(status: ScreenStatus.failure);
+  const LaunchDetailState.failure({required LaunchHeaderViewModel header})
+      : this._(status: ScreenStatus.failure, header: header);
 
   final ScreenStatus status;
-  final LaunchModel? detailedLaunchModel;
-  final List<LinkButton>? links;
-  final LaunchpadViewModel? launchpad;
+
+  final BodyContentViewModel? body;
+
+  final LaunchHeaderViewModel header;
 
   @override
-  List<Object> get props =>
-      [status, detailedLaunchModel ?? {}, links ?? [], launchpad ?? {}];
+  List<Object> get props => [
+        status,
+        header,
+        body?.links ?? [],
+        body?.launchpad ?? {},
+        body?.rocket ?? {},
+        body?.payloads ?? []
+      ];
+}
+
+class BodyContentViewModel {
+  final List<LinkButton>? links;
+  final LaunchpadViewModel? launchpad;
+  final RocketViewModel? rocket;
+  final List<PayloadViewModel>? payloads;
+
+  BodyContentViewModel(
+      {this.links, this.launchpad, this.rocket, this.payloads});
 }
 
 class LinkButton {
@@ -42,7 +70,34 @@ class LinkButton {
 
 class LaunchpadViewModel {
   final String title;
-  final String url;
+  final String? imageUrl;
 
-  LaunchpadViewModel({required this.title, required this.url});
+  LaunchpadViewModel({required this.title, this.imageUrl});
+}
+
+class RocketViewModel {
+  final String title;
+  final String description;
+  final String? imageUrl;
+
+  RocketViewModel(
+      {required this.title, required this.description, this.imageUrl});
+}
+
+class PayloadViewModel {
+  final String title;
+  final String type;
+  final String mass;
+
+  PayloadViewModel(
+      {required this.title, required this.type, required this.mass});
+}
+
+class LaunchHeaderViewModel {
+  final String title;
+  final bool starred;
+  final String launchId;
+
+  LaunchHeaderViewModel(
+      {required this.title, required this.launchId, required this.starred});
 }

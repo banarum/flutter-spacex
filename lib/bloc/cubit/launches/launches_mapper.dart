@@ -1,20 +1,19 @@
 part of 'launches_cubit.dart';
 
-List<LaunchItemViewState> _mapLaunchesToView(
-    {required Map<LaunchModel, RocketModel> rockets,
-    required List<LaunchModel> launches,
-    required DateTime now}) {
-  return launches
-      .map((element) => LaunchItemViewState(
-            timeLabel: "",
-            title: element.name!,
-            rocketName: rockets[element]?.name ?? "None",
-            launchId: element.id,
-            timeValue: DateTime.parse(element.utcDate),
-          ))
-      .toList()
-    ..forEach((element) => element.timeLabel =
-        _mapTimeToString(now: now, launchTime: element.timeValue));
+LaunchItemViewState _mapLaunchToView(
+    {required RocketModel? rocket,
+    required LaunchModel launch,
+    required DateTime now,
+    required bool starred}) {
+  final timeValue = DateTime.parse(launch.utcDate);
+  return LaunchItemViewState(
+      timeLabel: _mapTimeToString(now: now, launchTime: timeValue),
+      title: launch.name!,
+      rocketName: rocket?.name ?? "None",
+      launchId: launch.id,
+      timeValue: timeValue,
+      patchUrl: launch.links.patch?.small,
+      starred: starred);
 }
 
 List<LaunchItemViewState> _mapViewToViewWithTime(
@@ -25,14 +24,20 @@ List<LaunchItemViewState> _mapViewToViewWithTime(
           timeLabel: _mapTimeToString(now: now, launchTime: element.timeValue),
           rocketName: element.rocketName,
           launchId: element.launchId,
-          title: element.title))
+          patchUrl: element.patchUrl,
+          title: element.title,
+          starred: element.starred
+  ))
       .toList();
 }
 
 String _mapTimeToString({required DateTime now, required DateTime launchTime}) {
   final difference = launchTime.difference(now);
 
-  if (difference.isNegative) return "Lift off!";
+  String formatTimeValue(int num) => num < 10 ? "0$num" : num.toString();
+
+  if (difference.isNegative)
+    return "Launched on ${formatTimeValue(launchTime.day)}.${formatTimeValue(launchTime.month)}.${launchTime.year}";
 
   final int daysLeft = difference.inDays;
   final int hoursLeft = difference.inHours - daysLeft * 24;
@@ -42,8 +47,6 @@ String _mapTimeToString({required DateTime now, required DateTime launchTime}) {
       daysLeft * 24 * 60 * 60 -
       hoursLeft * 60 * 60 -
       minutesLeft * 60;
-
-  String formatTimeValue(int num) => num < 10 ? "0$num" : num.toString();
 
   final String daysLabel = daysLeft.toString();
   final String hoursLabel = hoursLeft.toString();

@@ -9,15 +9,26 @@ part 'detail_mapper.dart';
 
 class LaunchDetailCubit extends Cubit<LaunchDetailState> {
   LaunchDetailCubit({required this.repository, required this.header})
-      : super(LaunchDetailState.loading(header: header));
+      : super(LaunchDetailState.loading(header: header)) {
+    _unsubscribeStarListener =
+        repository.favoritesObservable.subscribe(_onStarEvent);
+  }
 
   final Repository repository;
   final LaunchHeaderViewModel header;
 
+  late void Function() _unsubscribeStarListener;
+
+  void _onStarEvent(String launchId) async {
+    if (launchId == header.launchId) {
+      bool isStarred = await repository.isLaunchStarred(header.launchId);
+      emit(LaunchDetailState.fromState(
+          state: state, header: _mapHeaderToHeader(state.header, isStarred)));
+    }
+  }
+
   Future<void> starLaunch(bool value) async {
-    bool isStarred = await repository.starLaunch(header.launchId, value);
-    emit(LaunchDetailState.fromState(
-        state: state, header: _mapHeaderToHeader(state.header, isStarred)));
+    repository.starLaunch(header.launchId, value);
   }
 
   Future<void> _emitRocketView(LaunchModel launch) async {
@@ -80,5 +91,11 @@ class LaunchDetailCubit extends Cubit<LaunchDetailState> {
     } on Exception {
       emit(LaunchDetailState.failure(header: state.header));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _unsubscribeStarListener();
+    return super.close();
   }
 }

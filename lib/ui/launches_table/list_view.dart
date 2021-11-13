@@ -68,7 +68,7 @@ class _LaunchesListState extends State<LaunchesListView>
               onRefresh: () => context.read<LaunchesCubit>().refreshLaunches(),
               child: listContent());
         } else {
-          return Align(
+          return const Align(
               alignment: Alignment.topCenter,
               child: Padding(
                   padding: EdgeInsets.all(defaultMargin),

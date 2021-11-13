@@ -63,9 +63,17 @@ class _LaunchesListState extends State<LaunchesListView>
             message: 'Oops something went wrong!',
             onRefresh: () => context.read<LaunchesCubit>().refreshLaunches());
       case ListStatus.success:
-        return RefreshIndicator(
-            onRefresh: () => context.read<LaunchesCubit>().refreshLaunches(),
-            child: listContent());
+        if (launchesState.launches!.isNotEmpty) {
+          return RefreshIndicator(
+              onRefresh: () => context.read<LaunchesCubit>().refreshLaunches(),
+              child: listContent());
+        } else {
+          return Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                  padding: EdgeInsets.all(defaultMargin),
+                  child: Text("No launches found")));
+        }
       default:
         return RefreshIndicator(
             onRefresh: () => context.read<LaunchesCubit>().refreshLaunches(),

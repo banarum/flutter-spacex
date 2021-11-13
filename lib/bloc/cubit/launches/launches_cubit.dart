@@ -37,7 +37,6 @@ class LaunchesCubit extends Cubit<LaunchesState> {
   }
 
   Future<void> _renderLaunches(Iterable<LaunchModel> launches) async {
-    await repository.getRocketForLaunch(launches.first);
     HashMap<LaunchModel, RocketModel?> rockets = HashMap();
     HashMap<LaunchModel, bool> stars = HashMap();
 

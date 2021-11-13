@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spacex/bloc/cubit/launch_detail/detail_cubit.dart';
 import 'package:flutter_spacex/bloc/cubit/launches/launches_cubit.dart';
-import 'package:flutter_spacex/ui/launch_detail/launch_detail_view.dart';
+import 'package:flutter_spacex/ui/common/elements.dart';
+import 'package:flutter_spacex/ui/common/styles.dart';
 import 'package:flutter_spacex/ui/launches_table/launch_item_view.dart';
 
 class LaunchesListView extends StatefulWidget {
@@ -26,13 +27,10 @@ class _LaunchesListState extends State<LaunchesListView>
     context.read<LaunchesCubit>().stopTicker();
   }
 
-  late ScrollController _controller;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addObserver(this);
-    _controller = ScrollController()..addListener(_scrollListener);
   }
 
   @override
@@ -61,19 +59,20 @@ class _LaunchesListState extends State<LaunchesListView>
 
     switch (launchesState.status) {
       case ListStatus.failure:
-        return const Center(child: Text('Oops something went wrong!'));
+        return failMessageView(
+            message: 'Oops something went wrong!',
+            onRefresh: () => context.read<LaunchesCubit>().refreshLaunches());
       case ListStatus.success:
-        return listContent();
+        return RefreshIndicator(
+            onRefresh: () => context.read<LaunchesCubit>().refreshLaunches(),
+            child: listContent());
       default:
-        return const Center(
-          child: CupertinoActivityIndicator(),
-        );
-    }
-  }
-
-  void _scrollListener() {
-    if (_controller.position.extentAfter < 100) {
-      context.read<LaunchesCubit>().lazyLoadMoreLaunches();
+        return RefreshIndicator(
+            onRefresh: () => context.read<LaunchesCubit>().refreshLaunches(),
+            child: Container(
+                height: MediaQuery.of(context).size.width,
+                width: 400,
+                child: const CupertinoActivityIndicator()));
     }
   }
 
@@ -81,16 +80,12 @@ class _LaunchesListState extends State<LaunchesListView>
     return Builder(builder: (context) {
       final launchesState = context.watch<LaunchesCubit>().state;
       return ListView.builder(
-          itemCount: launchesState.launches!.length +
-              (launchesState.isLazyLoading ? 1 : 0),
-          controller: _controller,
-          itemBuilder: (context, i) => Container(
-                child: i < launchesState.launches!.length
-                    ? LaunchItemView(
-                        launch: launchesState.launches![i],
-                        onItemTouched: gotoLaunch)
-                    : const CupertinoActivityIndicator(),
-              ));
+          padding: EdgeInsets.only(
+              bottom:
+                  defaultMargin / 2 + MediaQuery.of(context).padding.bottom),
+          itemCount: launchesState.launches!.length,
+          itemBuilder: (context, i) => LaunchItemView(
+              launch: launchesState.launches![i], onItemTouched: gotoLaunch));
     });
   }
 }

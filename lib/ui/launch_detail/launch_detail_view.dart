@@ -37,7 +37,7 @@ class LaunchDetailView extends StatelessWidget {
     return BlocProvider(
         create: (_) => LaunchDetailCubit(
             repository: context.read<Repository>(), header: args)
-          ..getLaunchDetails(args.launchId),
+          ..getLaunchDetails(),
         child: screenContent());
   }
 }

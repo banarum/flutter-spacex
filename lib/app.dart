@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spacex/bloc/cubit/launch_detail/detail_cubit.dart';
 import 'package:flutter_spacex/network/repository.dart';
@@ -16,6 +17,11 @@ class App extends StatelessWidget {
         value: repository,
         child: CupertinoApp(
           title: 'SpaceX official',
+          localizationsDelegates: const [
+            DefaultMaterialLocalizations.delegate,
+            DefaultCupertinoLocalizations.delegate,
+            DefaultWidgetsLocalizations.delegate,
+          ],
           onGenerateRoute: (RouteSettings settings) {
             var routes = <String, WidgetBuilder>{
               "/": (ctx) => const LaunchTableView(),

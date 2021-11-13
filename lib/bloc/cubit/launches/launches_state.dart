@@ -1,30 +1,40 @@
 part of 'launches_cubit.dart';
 
 enum ListStatus { loading, success, failure }
+enum FilterType { none, star }
 
 class LaunchesState extends Equatable {
   const LaunchesState._(
       {this.status = ListStatus.loading,
       this.launches,
-      this.isLazyLoading = false});
+      required this.filter});
 
-  const LaunchesState.loading() : this._();
+  LaunchesState.fromState({required LaunchesState state, FilterType? filter}):this._(
+      status: state.status,
+      launches: state.launches,
+      filter: filter ?? state.filter,
+  );
+
+  const LaunchesState.loading({required FilterType filter})
+      : this._(filter: filter);
 
   const LaunchesState.success(
-      {List<LaunchItemViewState>? launches, bool isLazyLoading = false})
+      {List<LaunchItemViewState>? launches,
+      required FilterType filter})
       : this._(
             status: ListStatus.success,
             launches: launches,
-            isLazyLoading: isLazyLoading);
+            filter: filter);
 
-  const LaunchesState.failure() : this._(status: ListStatus.failure);
+  const LaunchesState.failure({required FilterType filter})
+      : this._(status: ListStatus.failure, filter: filter);
 
   final ListStatus status;
   final List<LaunchItemViewState>? launches;
-  final bool isLazyLoading;
+  final FilterType filter;
 
   @override
-  List<Object> get props => [status, launches.hashCode, isLazyLoading];
+  List<Object> get props => [status, launches.hashCode, filter];
 }
 
 class LaunchItemViewState {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spacex/bloc/cubit/launch_detail/detail_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spacex/network/repository.dart';
+import 'package:flutter_spacex/ui/common/elements.dart';
 import 'package:flutter_spacex/ui/launch_detail/launchpad_view.dart';
 import 'package:flutter_spacex/ui/launch_detail/links_view.dart';
 import 'package:flutter_spacex/ui/launch_detail/payloads_view.dart';
@@ -17,10 +18,10 @@ class LaunchDetailContentView extends StatelessWidget {
         child: Center(
             child: Column(
       children: const [
-        RocketView(),
+        PayloadsView(),
         LaunchpadView(),
+        RocketView(),
         LinksView(),
-        PayloadsView()
       ],
     )));
   }
@@ -31,7 +32,9 @@ class LaunchDetailContentView extends StatelessWidget {
 
     switch (launchesState.status) {
       case ScreenStatus.failure:
-        return const Center(child: Text('Oops something went wrong!'));
+        return failMessageView(
+            message: 'Oops something went wrong!',
+            onRefresh: () => context.read<LaunchDetailCubit>().getLaunchDetails());
       case ScreenStatus.success:
         return launchItemScreen();
       default:

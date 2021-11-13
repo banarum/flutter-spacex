@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_spacex/bloc/cubit/launch_detail/detail_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spacex/ui/common/styles.dart';
 
 class RocketView extends StatelessWidget {
   const RocketView({Key? key}) : super(key: key);
@@ -9,23 +10,23 @@ class RocketView extends StatelessWidget {
   Widget build(BuildContext context) {
     final launchDetailState = context.watch<LaunchDetailCubit>().state;
     if (launchDetailState.body?.rocket != null) {
-      return Column(
+      return Padding(padding: defaultItemPadding, child: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 10, bottom: 10),
-            child: Text(launchDetailState.body!.rocket!.title),
+          Padding(
+            padding: const EdgeInsets.only(bottom: defaultMargin),
+            child: Text(launchDetailState.body!.rocket!.title, style: TextStyles.title),
           ),
           SizedBox(
               child: launchDetailState.body?.rocket?.imageUrl != null
                   ? Image.network(launchDetailState.body!.rocket!.imageUrl!,
                       fit: BoxFit.cover)
                   : const SizedBox.shrink()),
-          Container(
-            margin: const EdgeInsets.only(top: 10, bottom: 10),
-            child: Text(launchDetailState.body!.rocket!.description),
+          Padding(
+            padding: const EdgeInsets.only(top: defaultMargin),
+            child: Text(launchDetailState.body!.rocket!.description, style: TextStyles.common),
           ),
         ],
-      );
+      ));
     } else {
       return const SizedBox.shrink();
     }

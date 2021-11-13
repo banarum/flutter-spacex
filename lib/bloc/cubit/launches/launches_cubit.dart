@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -11,12 +12,10 @@ part 'launches_mapper.dart';
 
 class LaunchesCubit extends Cubit<LaunchesState> {
   LaunchesCubit({required this.repository})
-      : super(const LaunchesState.loading()) {
-    _unsubscribeStarListener = repository.favoritesObservable.subscribe(_onStarEvent);
+      : super(const LaunchesState.loading(filter: FilterType.none)) {
+    _unsubscribeStarListener =
+        repository.favoritesObservable.subscribe(_onStarEvent);
   }
-
-  static const launchesInitialLoad = 15;
-  static const launchesPerLazyLoad = 5;
 
   final Repository repository;
   StreamSubscription<void>? _tickerSubscription;
@@ -26,12 +25,66 @@ class LaunchesCubit extends Cubit<LaunchesState> {
   void _onStarEvent(String launchId) async {
     if (state.status == ListStatus.success) {
       final newValue = await repository.isLaunchStarred(launchId);
-      emit(LaunchesState.success(isLazyLoading: state.isLazyLoading, launches: state.launches!.map((e) {
-        if (e.launchId == launchId) {
-          e.starred = newValue;
-        }
-        return e;
-      }).toList()));
+      emit(LaunchesState.success(
+          launches: state.launches!.map((e) {
+            if (e.launchId == launchId) {
+              e.starred = newValue;
+            }
+            return e;
+          }).toList(),
+          filter: state.filter));
+    }
+  }
+
+  Future<void> _renderLaunches(Iterable<LaunchModel> launches) async {
+    await repository.getRocketForLaunch(launches.first);
+    HashMap<LaunchModel, RocketModel?> rockets = HashMap();
+    HashMap<LaunchModel, bool> stars = HashMap();
+
+    // Needs synchronised loading so caching can do it's job
+    for (var launch in launches) {
+      rockets[launch] = await repository.getRocketForLaunch(launch);
+      stars[launch] = await repository.isLaunchStarred(launch.id);
+    }
+
+    final launchViews = launches
+        .map((launch) => _mapLaunchToView(
+            rocket: rockets[launch],
+            launch: launch,
+            now: DateTime.now(),
+            starred: stars[launch]!))
+        .toList();
+
+    emit(LaunchesState.success(launches: launchViews, filter: state.filter));
+  }
+
+  Future<Iterable<LaunchModel>> _getFilteredLaunches(
+      {required Iterable<LaunchModel> source, int? size}) async {
+    Iterable<LaunchModel> filteredLaunches = source;
+
+    if (state.filter == FilterType.star) {
+      HashMap<LaunchModel, bool> starred = HashMap();
+
+      for (var element in filteredLaunches) {
+        starred[element] = await repository.isLaunchStarred(element.id);
+      }
+
+      filteredLaunches = filteredLaunches.where((element) => starred[element]!);
+    }
+
+    if (size != null) {
+      filteredLaunches = filteredLaunches.take(size);
+    }
+
+    return filteredLaunches;
+  }
+
+  Future<void> setFilter(FilterType filter) async {
+    if (state.status == ListStatus.success) {
+      emit(LaunchesState.fromState(state: state, filter: filter));
+      final launches =
+          await _getFilteredLaunches(source: repository.launchesData!);
+      _renderLaunches(launches);
     }
   }
 
@@ -40,48 +93,16 @@ class LaunchesCubit extends Cubit<LaunchesState> {
         .takeWhile((element) => true);
   }
 
-  Future<void> lazyLoadMoreLaunches() async {
-    if (state.isLazyLoading ||
-        state.status != ListStatus.success ||
-        state.launches!.length >= repository.launchesData!.length) return;
-
-    emit(LaunchesState.success(launches: state.launches, isLazyLoading: true));
-
-    try {
-      final chosenLaunches = repository.launchesData!
-          .take(state.launches!.length + launchesPerLazyLoad);
-
-      final launchViews = await Future.wait(chosenLaunches.map((launch) async =>
-          _mapLaunchToView(
-              rocket: await repository.getRocketForLaunch(launch),
-              launch: launch,
-              now: DateTime.now(),
-              starred: await repository.isLaunchStarred(launch.id))));
-
-      emit(LaunchesState.success(launches: launchViews));
-
-      // ignore: empty_catches
-    } on Exception {}
-  }
-
   Future<void> refreshLaunches() async {
-    emit(const LaunchesState.loading());
+    emit(LaunchesState.loading(filter: state.filter));
 
     try {
       await repository.refreshLaunchesData();
 
-      final chosenLaunches = repository.launchesData!.take(launchesInitialLoad);
-
-      final launchViews = await Future.wait(chosenLaunches.map((launch) async =>
-          _mapLaunchToView(
-              rocket: await repository.getRocketForLaunch(launch),
-              launch: launch,
-              now: DateTime.now(),
-              starred: await repository.isLaunchStarred(launch.id))));
-
-      emit(LaunchesState.success(launches: launchViews));
+      await _renderLaunches(
+          await _getFilteredLaunches(source: repository.launchesData!));
     } on Exception {
-      emit(const LaunchesState.failure());
+      emit(LaunchesState.failure(filter: state.filter));
     }
   }
 
@@ -90,7 +111,7 @@ class LaunchesCubit extends Cubit<LaunchesState> {
       emit(LaunchesState.success(
           launches: _mapViewToViewWithTime(
               views: state.launches!, now: DateTime.now()),
-          isLazyLoading: state.isLazyLoading));
+          filter: state.filter));
     }
   }
 

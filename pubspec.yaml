@@ -36,6 +36,8 @@ dependencies:
 
   equatable: ^2.0.3
 
+  url_launcher: ^6.0.12
+
   shared_preferences: ^2.0.8
 
   flutter:

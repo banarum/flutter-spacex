@@ -130,6 +130,8 @@ class Observable<T> {
   }
 
   void emit(T item) {
-    _subscribers.forEach((element) => element(item));
+    for (var element in _subscribers) {
+      element(item);
+    }
   }
 }

@@ -75,11 +75,11 @@ class LaunchDetailCubit extends Cubit<LaunchDetailState> {
     });
   }
 
-  Future<void> getLaunchDetails(String id) async {
+  Future<void> getLaunchDetails() async {
     emit(LaunchDetailState.loading(header: state.header));
 
     try {
-      final launch = await repository.getDetailedDataForLaunch(id);
+      final launch = await repository.getDetailedDataForLaunch(header.launchId);
       final links = _mapLaunchToLinkButtons(launch);
 
       emit(LaunchDetailState.success(header: state.header, links: links));

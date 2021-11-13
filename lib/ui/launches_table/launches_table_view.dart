@@ -22,21 +22,28 @@ class LaunchTableView extends StatelessWidget {
   // Let's put screen content here so Bloc could be properly initialized by this point
   Widget screenContent() {
     return Builder(builder: (context) {
+      final launchesState = context.watch<LaunchesCubit>().state;
       return CupertinoPageScaffold(
           navigationBar: CupertinoNavigationBar(
             middle: const Text('SpaceX'),
             trailing: CupertinoButton(
               padding: EdgeInsets.zero,
-              child: const Icon(
-                CupertinoIcons.refresh,
+              child: Icon(
+                launchesState.filter == FilterType.star
+                    ? Icons.star
+                    : Icons.star_border,
                 size: 25,
               ),
-              onPressed: () => context.read<LaunchesCubit>()
-                ..refreshLaunches()
-                ..startTicker(),
+              onPressed: () => context.read<LaunchesCubit>().setFilter(
+                  launchesState.filter == FilterType.star
+                      ? FilterType.none
+                      : FilterType.star),
             ),
           ),
-          child: const SafeArea(child: LaunchesListView()));
+          child: const SafeArea(
+            child: LaunchesListView(),
+            bottom: false,
+          ));
     });
   }
 }
